@@ -1,5 +1,4 @@
 import React, {useState, useRef} from 'react';
-import LinearGradient from 'react-native-linear-gradient';
 import {
   SafeAreaView,
   StyleSheet,
@@ -9,36 +8,43 @@ import {
   TouchableWithoutFeedback,
 } from 'react-native';
 
-const CheckIcon = require('./images/RightCheck.png');
+const joinImage = require('./images/JoinImage.png');
+const checkIconImage = require('./images/CheckIcon.png');
+const joinedImage = require('./images/Joined.png');
 
 const App = () => {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const fadeOut = useRef(new Animated.Value(1)).current;
-
-  const [disable, setDisable] = useState(false);
-  const [hideJoinText, setHideJoinText] = useState(false);
+  // First animation for opacity 0 for join button
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+  // animation for joining icon opacity set 1
+  const fadeOut = useRef(new Animated.Value(0)).current;
+  // animation for joined text opacity set 1 and fadeOut set as 0 to show animation transition
   const fadeInWithJoined = useRef(new Animated.Value(0)).current;
 
-  const onPress = () => {
+  // State to prevent multiple api call when user click button multiple times
+  const [disable, setDisable] = useState(false);
+
+  // Method for manage join button
+  const onJoinButtonPressed = () => {
     setDisable(true);
     Animated.timing(fadeAnim, {
       toValue: 0,
       duration: 800,
       useNativeDriver: true,
     }).start();
-    onJoiningStarted();
+    onJoiningStarted(); // Do API called just before Animation start
   };
 
+  // Method to manage animation for API call running
   const onJoiningStarted = () => {
     Animated.timing(fadeOut, {
       toValue: 1,
       duration: 600,
       useNativeDriver: true,
-    }).start(() => setTimeout(onJoinedSuccess, 1000));
+    }).start(() => setTimeout(onJoinedSuccess, 1000)); // timeout is for API call waiting time
   };
 
+  // after API successfully done show Joined text in the UI
   const onJoinedSuccess = () => {
-    setHideJoinText(true);
     Animated.timing(fadeOut, {
       toValue: 0,
       duration: 300,
@@ -51,26 +57,23 @@ const App = () => {
     }).start();
   };
 
+  // TODO: only testing purpose
+  // Method to reset animation and state on for testing
   const onReset = () => {
     setDisable(false);
     fadeAnim.setValue(1);
+    fadeInWithJoined.setValue(0);
     fadeOut.setValue(0);
-    setHideJoinText(false);
   };
 
+  // create small component for reusability
   const JoinButton = props => {
     return (
       <TouchableWithoutFeedback
         style={{flex: 1}}
         disabled={disable}
-        onPress={onPress}>
-        <LinearGradient
-          start={{x: 0.6, y: 0.8}}
-          end={{x: 1, y: 0.1}}
-          colors={['#f7358c', '#a34fd7', '#7d63f1']}
-          style={styles.linearGradient}>
-          {props.children}
-        </LinearGradient>
+        onPress={onJoinButtonPressed}>
+        <View style={styles.linearGradient}>{props.children}</View>
       </TouchableWithoutFeedback>
     );
   };
@@ -78,51 +81,48 @@ const App = () => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.mainContainer}>
-        {!hideJoinText && (
-          <JoinButton>
-            <Animated.Text style={[styles.buttonText, {opacity: fadeAnim}]}>
-              {'Join'}
-            </Animated.Text>
-            <Animated.Image
-              source={CheckIcon}
-              resizeMode="contain"
-              style={[styles.checkIcon, {opacity: fadeOut}]}
-            />
-          </JoinButton>
-        )}
-        {hideJoinText && (
-          <Animated.Text
+        <JoinButton>
+          <Animated.Image
+            resizeMode="contain"
+            source={joinImage}
             style={[
-              styles.animatedText,
+              styles.positionAbsolute,
+              styles.imageContainer,
+              {opacity: fadeAnim},
+            ]}
+          />
+
+          <Animated.Image
+            resizeMode="contain"
+            source={checkIconImage}
+            style={[
+              styles.positionAbsolute,
+              styles.imageContainer,
+              {opacity: fadeOut},
+            ]}
+          />
+
+          <Animated.Image
+            resizeMode="contain"
+            source={joinedImage}
+            style={[
+              styles.positionAbsolute,
+              styles.joinedTextImage,
               {
                 opacity: fadeInWithJoined,
               },
-            ]}>
-            {'Joined'}
-          </Animated.Text>
-        )}
+            ]}
+          />
+        </JoinButton>
       </View>
       <TouchableWithoutFeedback onPress={onReset}>
-        <Text style={styles.resetText}>reset</Text>
+        <Text style={styles.resetText}>Reset</Text>
       </TouchableWithoutFeedback>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  mainContainer: {
-    borderWidth: 0,
-    minHeight: 50,
-    maxHeight: 70,
-    minWidth: 100,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  animatedText: {
-    color: 'black',
-    fontSize: 26,
-    fontWeight: 'bold',
-  },
   container: {
     flex: 1,
     alignItems: 'center',
@@ -130,37 +130,34 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderWidth: 1,
   },
-  linearGradient: {
-    padding: 0,
-    width: 82,
-    height: 45,
+  mainContainer: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 10,
-    borderRadius: 30,
   },
-  checkIcon: {
-    // position: 'absolute',
-    // top: 0,
-    // bottom: 0,
-    // left: 0,
-    // right: 0,
-    height: '100%',
-    width: '40%',
+  linearGradient: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 0,
+    width: 200,
+    height: 250,
+    paddingHorizontal: 5,
   },
-  buttonText: {
-    fontSize: 24,
+  positionAbsolute: {
     position: 'absolute',
-    textAlign: 'center',
-    fontFamily: 'Montserrat',
     top: 0,
     bottom: 0,
     left: 0,
     right: 0,
-    fontWeight: 'bold',
-    margin: 10,
-    color: '#FFFFFF',
-    backgroundColor: 'transparent',
+  },
+  imageContainer: {
+    height: '100%',
+    width: '100%',
+  },
+  joinedTextImage: {
+    height: '100%',
+    width: '70%',
+    left: 25,
   },
   resetText: {color: 'black', fontSize: 32},
 });
